@@ -1,4 +1,6 @@
 import Button from '@/components/boton';
+import { Colors } from '@/constants/theme';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
     Image,
@@ -12,6 +14,7 @@ import {
 export default function Login() {
     const { width } = useWindowDimensions();
     const isMobile = width < 600;
+    const router = useRouter();
 
     return (
         <View style={styles.container}>
@@ -19,7 +22,7 @@ export default function Login() {
             <View style={[styles.card, { width: isMobile ? '90%' : '50%' }]}>
 
                 <Image source={require('../assets/images/ImagenLogo.png')} style={styles.logo} />
-                <Text style={styles.title}>Inicio de Sesión</Text>
+                <Text style={styles.title}>INICIO DE SESIÓN</Text>
 
                 <TextInput
                     style={styles.input}
@@ -39,9 +42,9 @@ export default function Login() {
             </View>
 
             <View style={styles.bottomContainer}>
-                <Button
+                <Button style={styles.bottom}
                     title="Crear cuenta"
-                    onPress={() => console.log('click')}
+                    onPress={() => router.push('/CrearCuenta')}
                 />
             </View>
 
@@ -67,6 +70,8 @@ const styles = StyleSheet.create({
         fontSize: 32,
         fontWeight: 'bold',
         marginBottom: 40,
+        color: Colors.light.text2
+
     },
 
     input: {
@@ -81,13 +86,17 @@ const styles = StyleSheet.create({
 
     forgotText: {
         alignSelf: 'flex-end',
-        color: '#007BFF',
+        color: Colors.light.text2,
         marginTop: -10,
     },
 
     bottomContainer: {
         width: '100%',
         alignItems: 'center',
+    },
+    bottom: {
+        backgroundColor: Colors.light.button
+
     },
     logo: {
         width: 200,
