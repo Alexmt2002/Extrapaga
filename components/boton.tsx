@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native';
 
 type Props = {
     title: string;
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
         width: '90%',
         maxWidth: 370,
         height: 50,
-        backgroundColor: '#007BFF',
+        backgroundColor: '#5ec287ff',
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',

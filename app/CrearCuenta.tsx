@@ -23,13 +23,13 @@ export default function CrearCuenta() {
                 <Button
                     title="Padre"
                     style={styles.bottom}
-                    onPress={() => console.log('Padre')}
+                    onPress={() => router.push('/CrearCuentaPadre')}
                 />
 
                 <Button
                     title="Hijo"
                     style={styles.bottom}
-                    onPress={() => console.log('Hijo')}
+                    onPress={() => router.push('/CrearCuentaHijo')}
                 />
 
             </View>
