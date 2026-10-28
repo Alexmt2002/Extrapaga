@@ -1,106 +1,110 @@
-import Button from '@/components/boton';
-import { Colors } from '@/constants/theme';
-import { useRouter } from 'expo-router';
-import React from 'react';
+import Button from "@/components/boton";
+import { Colors } from "@/constants/theme";
+import { useRouter } from "expo-router";
 import {
     Image,
     StyleSheet,
     Text,
     TextInput,
     useWindowDimensions,
-    View
-} from 'react-native';
+    View,
+} from "react-native";
 
 export default function Login() {
-    const { width } = useWindowDimensions();
-    const isMobile = width < 600;
-    const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isMobile = width < 600;
+  const router = useRouter();
 
-    return (
-        <View style={styles.container}>
+  return (
+    <View style={styles.container}>
+      <View style={[styles.card, { width: isMobile ? "90%" : "50%" }]}>
+        <Image
+          source={require("../assets/images/ImagenLogo.png")}
+          style={styles.logo}
+        />
+        <Text style={styles.title}>INICIO DE SESIÓN</Text>
 
-            <View style={[styles.card, { width: isMobile ? '90%' : '50%' }]}>
+        <TextInput style={styles.input} placeholder="Correo electrónico" />
 
-                <Image source={require('../assets/images/ImagenLogo.png')} style={styles.logo} />
-                <Text style={styles.title}>INICIO DE SESIÓN</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          secureTextEntry
+        />
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Usuario"
-                />
+        <Text style={styles.forgotText}>Recuperar contraseña</Text>
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Contraseña"
-                    secureTextEntry
-                />
-
-                <Text style={styles.forgotText}>
-                    Recuperar contraseña
-                </Text>
-
-            </View>
-
-            <View style={styles.bottomContainer}>
-                <Button style={styles.bottom}
-                    title="Crear cuenta"
-                    onPress={() => router.push('/CrearCuenta')}
-                />
-            </View>
-
+        <View style={styles.bottomContainer}>
+          <Button
+            style={styles.bottom}
+            title="Iniciar sesión"
+            onPress={() => router.push("/CrearCuenta")}
+          />
         </View>
-    );
+
+        <View style={[styles.bottomContainer, styles.bottomContainersecond]}>
+          <Button
+            style={styles.bottom}
+            title="Crear cuenta"
+            onPress={() => router.push("/CrearCuenta")}
+          />
+        </View>
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'space-between', // separa arriba y abajo
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        paddingVertical: 40,
-    },
+  container: {
+    flex: 1,
+    justifyContent: "space-between", // separa arriba y abajo
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingVertical: 40,
+  },
 
-    card: {
-        alignItems: 'center',
-        maxWidth: 400,
-    },
+  card: {
+    alignItems: "center",
+    maxWidth: 400,
+  },
 
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 40,
-        color: Colors.light.text2
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    marginBottom: 40,
+    color: Colors.light.text2,
+  },
 
-    },
+  input: {
+    width: "91%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
 
-    input: {
-        width: '100%',
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
-        marginBottom: 20,
-        paddingHorizontal: 10,
-    },
+  forgotText: {
+    alignSelf: "flex-end",
+    color: Colors.light.text2,
+    marginTop: -10,
+  },
 
-    forgotText: {
-        alignSelf: 'flex-end',
-        color: Colors.light.text2,
-        marginTop: -10,
-    },
-
-    bottomContainer: {
-        width: '100%',
-        alignItems: 'center',
-    },
-    bottom: {
-        backgroundColor: Colors.light.button
-
-    },
-    logo: {
-        width: 200,
-        height: 200,
-        resizeMode: 'contain',
-    }
+  bottomContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 20,
+  },
+  bottomContainersecond: {
+    marginTop: '40%',
+  },
+  bottom: {
+    backgroundColor: Colors.light.button,
+  },
+  logo: {
+    width: 180,
+    height: 180,
+    resizeMode: "contain",
+  },
 });

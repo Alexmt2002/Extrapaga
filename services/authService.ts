@@ -1,10 +1,9 @@
-// services/authService.ts
 
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
-type RegisterChildParams = {
+type RegisterUserParams = {
     username: string;
     nombreCompleto: string;
     fecha: Date;
@@ -12,56 +11,55 @@ type RegisterChildParams = {
     password: string;
 };
 
-export const registerChild = async ({
+export const registerUser = async ({
     username,
     nombreCompleto,
     fecha,
     email,
     password
-}: RegisterChildParams) => {
+}: RegisterUserParams) => {
+    // 1. Crear la cuenta en Firebase Authentication
+    let user;
+
     try {
-        // 1️ Crear usuario en Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(
             auth,
-            email,
+            email.trim(),
             password
         );
 
-        const user = userCredential.user;
+        user = userCredential.user;
+    } catch (error: any) {
+        switch (error.code) {
+            case "auth/email-already-in-use":
+                throw new Error("El correo ya está registrado");
 
-        // 2️ Guardar datos en Firestore
+            case "auth/invalid-email":
+                throw new Error("El correo no es válido");
+
+            case "auth/weak-password":
+                throw new Error("La contraseña no cumple los requisitos");
+
+            default:
+                throw new Error("No se ha podido crear la cuenta");
+        }
+    }
+
+    // 2. Guardar el perfil en Cloud Firestore
+    try {
         await setDoc(doc(db, "users", user.uid), {
-            username,
-            nombreCompleto,
-            email,
+            username: username.trim(),
+            nombreCompleto: nombreCompleto.trim(),
+            email: user.email,
             fechaNacimiento: Timestamp.fromDate(fecha),
-
-            //  claves importantes
-            role: "child",
-            familyId: null,
-
-            //  metadata
             createdAt: Timestamp.now()
         });
-
-        return user;
-
-    } catch (error: any) {
-
-        //  Manejo de errores comunes
-        if (error.code === "auth/email-already-in-use") {
-            throw new Error("El correo ya está registrado");
-        }
-
-        if (error.code === "auth/invalid-email") {
-            throw new Error("El correo no es válido");
-        }
-
-        if (error.code === "auth/weak-password") {
-            throw new Error("La contraseña debe tener al menos 6 caracteres");
-        }
-
-        // error genérico
-        throw new Error("Error al crear la cuenta");
+    } catch (error) {
+        // La cuenta de Authentication ya puede existir.
+        // No ocultamos el error original de Firestore.
+        console.error("Error al guardar el perfil:", error);
+        throw error;
     }
+
+    return user;
 };

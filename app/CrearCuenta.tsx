@@ -1,11 +1,12 @@
 import Button from "@/components/boton";
 import { Colors } from "@/constants/theme";
+import { registerUser } from "@/services/authService";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
     Image,
-    StyleSheet,
-    Text,
+    StyleSheet, 
+    Text,   
     TextInput,
     TouchableOpacity,
     useWindowDimensions,
@@ -107,7 +108,13 @@ export default function CrearCuenta() {
                 <Button
                     title="Crear"
                     style={{ marginTop: 20 }}
-                    onPress={() => console.log("Crear cuenta hijo")}
+                    onPress={() => registerUser({
+                        username,
+                        nombreCompleto,
+                        fecha: fecha || new Date(),
+                        email,
+                        password
+                    })}
                 />
             </View>
         </View>
