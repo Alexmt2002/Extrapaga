@@ -1,172 +1,170 @@
 import Button from "@/components/boton";
 import { Colors } from "@/constants/theme";
 import { registerUser } from "@/services/authService";
-import { useRouter } from "expo-router";
+// import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
     Image,
-    StyleSheet, 
-    Text,   
+    StyleSheet,
+    Text,
     TextInput,
     TouchableOpacity,
     useWindowDimensions,
-    View
+    View,
 } from "react-native";
-import { DatePickerModal } from 'react-native-paper-dates';
+import { DatePickerModal } from "react-native-paper-dates";
 
 export default function CrearCuenta() {
-    const router = useRouter();
-    const { width } = useWindowDimensions();
-    const isMobile = width < 600;
-    const [username, setUsername] = useState("");
-    const [nombreCompleto, setNombreCompleto] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [repeatPassword, setRepeatPassword] = useState("");
-    const [open, setOpen] = React.useState(false);
-    const [fecha, setFecha] = useState<Date | undefined>(new Date());
+  const { width } = useWindowDimensions();
+  const isMobile = width < 600;
+  const [username, setUsername] = useState("");
+  const [nombreCompleto, setNombreCompleto] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
+  const [open, setOpen] = React.useState(false);
+  const [fecha, setFecha] = useState<Date | undefined>(new Date());
 
-    const onConfirm = (params: any) => {
-        setOpen(false);
-        setFecha(params.date);
-    };
+  const onConfirm = (params: any) => {
+    setOpen(false);
+    setFecha(params.date);
+  };
 
-    return (
-        <View style={styles.container}>
+  return (
+    <View style={styles.container}>
+      <View style={[styles.content, { width: isMobile ? "90%" : "50%" }]}>
+        <Image
+          source={require("../assets/images/ImagenLogo.png")}
+          style={styles.logo}
+        />
 
-            <View style={[styles.content, { width: isMobile ? '90%' : '50%' }]}>
+        <Text style={styles.title}>DATOS PERSONALES</Text>
 
-                <Image source={require('../assets/images/ImagenLogo.png')} style={styles.logo} />
+        {/* 👤 Username */}
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre de usuario"
+          value={username}
+          onChangeText={setUsername}
+        />
 
-                <Text style={styles.title}>DATOS PERSONALES</Text>
+        {/* 🧑 Nombre completo */}
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre completo"
+          value={nombreCompleto}
+          onChangeText={setNombreCompleto}
+        />
 
-                {/* 👤 Username */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Nombre de usuario"
-                    value={username}
-                    onChangeText={setUsername}
-                />
+        {/* 📅 Fecha */}
+        {/* 📅 Fecha */}
+        <TouchableOpacity style={styles.input} onPress={() => setOpen(true)}>
+          <Text>
+            {fecha
+              ? fecha.toLocaleDateString()
+              : "Seleccionar fecha de nacimiento"}
+          </Text>
+        </TouchableOpacity>
 
-                {/* 🧑 Nombre completo */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Nombre completo"
-                    value={nombreCompleto}
-                    onChangeText={setNombreCompleto}
-                />
+        <DatePickerModal
+          locale="es"
+          mode="single"
+          visible={open}
+          onDismiss={() => setOpen(false)}
+          date={fecha}
+          onConfirm={onConfirm}
+        />
 
-                {/* 📅 Fecha */}
-                {/* 📅 Fecha */}
-                <TouchableOpacity
-                    style={styles.input}
-                    onPress={() => setOpen(true)}
-                >
-                    <Text>
-                        {fecha
-                            ? fecha.toLocaleDateString()
-                            : "Seleccionar fecha de nacimiento"}
-                    </Text>
-                </TouchableOpacity>
+        {/* 📧 Email */}
+        <TextInput
+          style={styles.input}
+          placeholder="Correo electrónico"
+          value={email}
+          onChangeText={setEmail}
+        />
 
-                <DatePickerModal
-                    locale="es"
-                    mode="single"
-                    visible={open}
-                    onDismiss={() => setOpen(false)}
-                    date={fecha}
-                    onConfirm={onConfirm}
-                />
+        {/* 🔒 Contraseña */}
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
 
-                {/* 📧 Email */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Correo electrónico"
-                    value={email}
-                    onChangeText={setEmail}
-                />
+        {/* 🔒 Repetir contraseña */}
+        <TextInput
+          style={styles.input}
+          placeholder="Repetir contraseña"
+          secureTextEntry
+          value={repeatPassword}
+          onChangeText={setRepeatPassword}
+        />
 
-                {/* 🔒 Contraseña */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Contraseña"
-                    secureTextEntry
-                    value={password}
-                    onChangeText={setPassword}
-                />
-
-                {/* 🔒 Repetir contraseña */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Repetir contraseña"
-                    secureTextEntry
-                    value={repeatPassword}
-                    onChangeText={setRepeatPassword}
-                />
-
-                {/* 🔽 Botón */}
-                <Button
-                    title="Crear"
-                    style={{ marginTop: 20 }}
-                    onPress={() => registerUser({
-                        username,
-                        nombreCompleto,
-                        fecha: fecha || new Date(),
-                        email,
-                        password
-                    })}
-                />
-            </View>
-        </View>
-    );
+        {/* 🔽 Botón */}
+        <Button
+          title="Crear"
+          style={{ marginTop: 20 }}
+          onPress={() =>
+            registerUser({
+              username,
+              nombreCompleto,
+              fecha: fecha || new Date(),
+              email,
+              password,
+            })
+          }
+        />
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: "#fff",
-    },
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
 
-    content: {
-        alignItems: 'center',
-        maxWidth: 400,
+  content: {
+    alignItems: "center",
+    maxWidth: 400,
+  },
 
-    },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 30,
+    textAlign: "center",
+    color: Colors.light.text2,
+  },
 
-    title: {
-        fontSize: 26,
-        fontWeight: "bold",
-        marginBottom: 30,
-        textAlign: "center",
-        color: Colors.light.text2
-    },
+  input: {
+    width: "100%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    justifyContent: "center",
+  },
 
-    input: {
-        width: "100%",
-        height: 50,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 10,
-        marginBottom: 15,
-        paddingHorizontal: 10,
-        justifyContent: "center",
-    },
-
-    dateInput: {
-        width: '95%',
-        height: 30,
-        borderRadius: 10,
-        padding: 10,
-        marginBottom: 15,
-        borderColor: '#ccc',
-        borderWidth: 3,
-    },
-    logo: {
-        width: 200,
-        height: 200,
-        resizeMode: 'contain',
-    }
+  dateInput: {
+    width: "95%",
+    height: 30,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    borderColor: "#ccc",
+    borderWidth: 3,
+  },
+  logo: {
+    width: 200,
+    height: 200,
+    resizeMode: "contain",
+  },
 });
