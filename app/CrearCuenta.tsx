@@ -1,10 +1,10 @@
 import Button from "@/components/boton";
 import { Colors } from "@/constants/theme";
+import { mostrarAlerta } from "@/services/alerService";
 import { registerUser } from "@/services/authService";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -14,7 +14,7 @@ import {
   TextInput,
   TouchableOpacity,
   useWindowDimensions,
-  View,
+  View
 } from "react-native";
 import { DatePickerModal } from "react-native-paper-dates";
 
@@ -41,7 +41,7 @@ export default function CrearCuenta() {
 
   const crearCuenta = async () => {
     if (!username.trim() || !nombreCompleto.trim() || !email.trim()) {
-      Alert.alert(
+      mostrarAlerta(
         "Campos obligatorios",
         "Completa todos los datos personales.",
       );
@@ -49,12 +49,12 @@ export default function CrearCuenta() {
     }
 
     if (!fecha) {
-      Alert.alert("Fecha obligatoria", "Selecciona tu fecha de nacimiento.");
+      mostrarAlerta("Fecha obligatoria", "Selecciona tu fecha de nacimiento.");
       return;
     }
 
     if (!tieneLongitudValida || !tieneMayuscula || !tieneNumero) {
-      Alert.alert(
+      mostrarAlerta(
         "Contraseña no válida",
         [
           !tieneLongitudValida ? "• Debe tener más de 8 caracteres." : "",
@@ -68,7 +68,7 @@ export default function CrearCuenta() {
     }
 
     if (password !== repeatPassword) {
-      Alert.alert("Error", "Las contraseñas no coinciden.");
+      mostrarAlerta("Error", "Las contraseñas no coinciden.");
       return;
     }
 
@@ -81,11 +81,11 @@ export default function CrearCuenta() {
         password,
       });
 
-      Alert.alert("Éxito", "Tu cuenta se ha creado correctamente.");
+      mostrarAlerta("Éxito", "Tu cuenta se ha creado correctamente.");
 
       router.push("/perfil");
     } catch (error) {
-      Alert.alert(
+      mostrarAlerta(
         "Error",
         error instanceof Error
           ? error.message
@@ -93,7 +93,6 @@ export default function CrearCuenta() {
       );
     }
   };
-
   return (
     <KeyboardAvoidingView
       style={styles.keyboardContainer}

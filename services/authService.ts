@@ -1,5 +1,17 @@
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { FirebaseError } from "firebase/app";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+  Timestamp,
+  where,
+} from "firebase/firestore";
 import { auth, db } from "./firebase";
 
 type RegisterUserParams = {
@@ -7,6 +19,10 @@ type RegisterUserParams = {
   nombreCompleto: string;
   fecha: Date;
   email: string;
+  password: string;
+};
+type LoginUserParams = {
+  username: string;
   password: string;
 };
 
@@ -86,4 +102,53 @@ export const registerUser = async ({
   }
 
   return user;
+};
+
+export const loginUser = async ({
+  username,
+  password,
+}: LoginUserParams) => {
+  const normalizedUsername = username.trim();
+
+  if (!normalizedUsername || !password) {
+    throw new Error("Debes indicar el nombre de usuario y la contraseña.");
+  }
+
+  const users = await getDocs(
+    query(
+      collection(db, "users"),
+      where("username", "==", normalizedUsername),
+    ),
+  );
+
+  if (users.size !== 1) {
+    throw new Error("Usuario o contraseña incorrectos.");
+  }
+
+  const email = users.docs[0].data().email;
+
+  if (typeof email !== "string" || !email.trim()) {
+    throw new Error("La cuenta no tiene un correo asociado válido.");
+  }
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email.trim(),
+      password,
+    );
+
+    return userCredential.user;
+  } catch (error) {
+    if (error instanceof FirebaseError) {
+      switch (error.code) {
+        case "auth/invalid-credential":
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+          throw new Error("Usuario o contraseña incorrectos.");
+      }
+    }
+
+    throw error;
+  }
 };

@@ -1,19 +1,47 @@
 import Button from "@/components/boton";
 import { Colors } from "@/constants/theme";
+import { mostrarAlerta } from "@/services/alerService";
+import { loginUser } from "@/services/authService";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    useWindowDimensions,
-    View,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
 } from "react-native";
 
 export default function Login() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const logearte = async () => {
+    if (!username.trim() || !password) {
+      mostrarAlerta(
+        "Campos obligatorios",
+        "Introduce tu usuario y contraseña.",
+      );
+      return;
+    }
+
+    try {
+      await loginUser({ username, password });
+      router.replace("/tareas");
+    } catch (error) {
+      Alert.alert(
+        "No se pudo iniciar sesión",
+        error instanceof Error
+          ? error.message
+          : "Inténtalo de nuevo más tarde.",
+      );
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -24,12 +52,20 @@ export default function Login() {
         />
         <Text style={styles.title}>INICIO DE SESIÓN</Text>
 
-        <TextInput style={styles.input} placeholder="Correo electrónico" />
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre de usuario"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
 
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
 
         <Text style={styles.forgotText}>Recuperar contraseña</Text>
@@ -38,7 +74,7 @@ export default function Login() {
           <Button
             style={styles.bottom}
             title="Iniciar sesión"
-            onPress={() => router.push("/CrearCuenta")}
+            onPress={logearte}
           />
         </View>
 
@@ -97,7 +133,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   bottomContainersecond: {
-    marginTop: '40%',
+    marginTop: "40%",
   },
   bottom: {
     backgroundColor: Colors.light.button,
