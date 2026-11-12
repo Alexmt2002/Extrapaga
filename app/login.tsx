@@ -1,6 +1,6 @@
+import { useAlerta } from "@/components/AlertaPersonalizada";
 import Button from "@/components/boton";
 import { Colors } from "@/constants/theme";
-import { mostrarAlerta } from "@/services/alerService";
 import { loginUser } from "@/services/authService";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -10,28 +10,27 @@ import {
   Text,
   TextInput,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 
 export default function Login() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { mostrarAlerta, alerta } = useAlerta();
 
   const logearte = async () => {
-    if (!username.trim() || !password) {
-      mostrarAlerta(
-        "Campos obligatorios",
-        "Introduce tu usuario y contraseña.",
-      );
+    if (!email.trim() || !password) {
+      mostrarAlerta("Campos obligatorios", "Introduce tu Gmail y contraseña.");
       return;
     }
 
     try {
-      await loginUser({ username, password });
-      router.replace("/tareas");
+      await loginUser({ email, password });
+      mostrarAlerta("Felicidades", "Has iniciado sesión correctamente.");
+      router.replace("/perfil");
     } catch (error) {
       mostrarAlerta(
         "No se pudo iniciar sesión",
@@ -53,9 +52,9 @@ export default function Login() {
 
         <TextInput
           style={styles.input}
-          placeholder="Nombre de usuario"
-          value={username}
-          onChangeText={setUsername}
+          placeholder="Gmail"
+          value={email}
+          onChangeText={setEmail}
           autoCapitalize="none"
         />
 
@@ -85,6 +84,7 @@ export default function Login() {
           />
         </View>
       </View>
+      {alerta}
     </View>
   );
 }

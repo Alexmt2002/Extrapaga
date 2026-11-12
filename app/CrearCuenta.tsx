@@ -1,6 +1,6 @@
+import { useAlerta } from "@/components/AlertaPersonalizada";
 import Button from "@/components/boton";
 import { Colors } from "@/constants/theme";
-import { mostrarAlerta } from "@/services/alerService";
 import { registerUser } from "@/services/authService";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -14,7 +14,7 @@ import {
   TextInput,
   TouchableOpacity,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 import { DatePickerModal } from "react-native-paper-dates";
 
@@ -29,6 +29,8 @@ export default function CrearCuenta() {
   const [repeatPassword, setRepeatPassword] = useState("");
   const [open, setOpen] = useState(false);
   const [fecha, setFecha] = useState<Date | undefined>(new Date());
+
+  const { mostrarAlerta, alerta } = useAlerta();
 
   const onConfirm = (params: { date?: Date }) => {
     setOpen(false);
@@ -224,6 +226,7 @@ export default function CrearCuenta() {
               onPress={crearCuenta}
             />
           </View>
+          {alerta}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
