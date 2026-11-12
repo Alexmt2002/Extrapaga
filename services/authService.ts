@@ -1,6 +1,7 @@
 import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import {
@@ -8,9 +9,9 @@ import {
   doc,
   getDocs,
   query,
-  setDoc,
+  runTransaction,
   Timestamp,
-  where,
+  where
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
@@ -52,14 +53,22 @@ export const registerUser = async ({
   email,
   password,
 }: RegisterUserParams) => {
-  // 1. Validar la contraseña antes de crear la cuenta
+  const normalizedUsername = username.trim().toLowerCase();
+
+  // 1. Validar username
+
+  if (normalizedUsername.includes("/")) {
+    throw new Error("El nombre de usuario no puede contener /.");
+  }
+
+  // 2. Validar contraseña
   const erroresPassword = validarPassword(password);
 
   if (erroresPassword.length > 0) {
     throw new Error(erroresPassword.join("\n"));
   }
 
-  // 2. Crear la cuenta en Firebase Authentication
+  // 3. Crear cuenta en Firebase Authentication
   let user;
 
   try {
@@ -73,41 +82,63 @@ export const registerUser = async ({
   } catch (error: any) {
     switch (error.code) {
       case "auth/email-already-in-use":
-        throw new Error("El correo ya está registrado");
+        throw new Error("El correo ya está registrado.");
 
       case "auth/invalid-email":
-        throw new Error("El correo no es válido");
+        throw new Error("El correo no es válido.");
 
       case "auth/weak-password":
-        throw new Error("La contraseña no cumple los requisitos");
+        throw new Error("La contraseña no cumple los requisitos.");
 
       default:
-        throw new Error("No se ha podido crear la cuenta");
+        throw new Error("No se ha podido crear la cuenta.");
     }
   }
 
-  // 3. Guardar el perfil en Cloud Firestore
+  // 4. Reservar username y guardar perfil
   try {
-    await setDoc(doc(db, "users", user.uid), {
-      username: username.trim(),
-      nombreCompleto: nombreCompleto.trim(),
-      email: user.email,
-      fechaNacimiento: Timestamp.fromDate(fecha),
-      createdAt: Timestamp.now(),
+    await runTransaction(db, async (transaction) => {
+      const usernameRef = doc(db, "usernames", normalizedUsername);
+      const usernameDoc = await transaction.get(usernameRef);
+
+      if (usernameDoc.exists()) {
+        throw new Error("Este nombre de usuario ya está registrado.");
+      }
+
+      const userRef = doc(db, "users", user.uid);
+
+      // Reservar el username
+      transaction.set(usernameRef, {
+        uid: user.uid,
+      });
+
+      // Guardar el perfil
+      transaction.set(userRef, {
+        username: normalizedUsername,
+        nombreCompleto: nombreCompleto.trim(),
+        email: user.email,
+        fechaNacimiento: Timestamp.fromDate(fecha),
+        createdAt: Timestamp.now(),
+      });
     });
   } catch (error) {
-    // La cuenta de Authentication ya puede existir.
-    console.error("Error al guardar el perfil:", error);
+    // Si falla Firestore, intentamos eliminar la cuenta recién creada
+    try {
+      await deleteUser(user);
+    } catch (deleteError) {
+      console.error(
+        "No se pudo eliminar la cuenta de Authentication:",
+        deleteError,
+      );
+    }
+
     throw error;
   }
 
   return user;
 };
 
-export const loginUser = async ({
-  username,
-  password,
-}: LoginUserParams) => {
+export const loginUser = async ({ username, password }: LoginUserParams) => {
   const normalizedUsername = username.trim();
 
   if (!normalizedUsername || !password) {
@@ -115,10 +146,7 @@ export const loginUser = async ({
   }
 
   const users = await getDocs(
-    query(
-      collection(db, "users"),
-      where("username", "==", normalizedUsername),
-    ),
+    query(collection(db, "users"), where("username", "==", normalizedUsername)),
   );
 
   if (users.size !== 1) {

@@ -5,13 +5,12 @@ import { loginUser } from "@/services/authService";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   Image,
   StyleSheet,
   Text,
   TextInput,
   useWindowDimensions,
-  View,
+  View
 } from "react-native";
 
 export default function Login() {
@@ -34,7 +33,7 @@ export default function Login() {
       await loginUser({ username, password });
       router.replace("/tareas");
     } catch (error) {
-      Alert.alert(
+      mostrarAlerta(
         "No se pudo iniciar sesión",
         error instanceof Error
           ? error.message
