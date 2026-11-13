@@ -30,6 +30,9 @@ export default function CrearCuenta() {
   const [open, setOpen] = useState(false);
   const [fecha, setFecha] = useState<Date | undefined>(new Date());
 
+  const [paso, setPaso] = useState(1);
+  const [rol, setRol] = useState<"parent" | "child" | null>(null);
+
   const { mostrarAlerta, alerta } = useAlerta();
 
   const onConfirm = (params: { date?: Date }) => {
@@ -81,6 +84,7 @@ export default function CrearCuenta() {
         fecha,
         email,
         password,
+        role: rol!,
       });
 
       mostrarAlerta("Éxito", "Tu cuenta se ha creado correctamente.");
@@ -113,118 +117,167 @@ export default function CrearCuenta() {
               style={styles.logo}
             />
 
-            <Text style={styles.title}>DATOS PERSONALES</Text>
+            {paso === 1 ? (
+              <View style={styles.selectorRol}>
+                <Text style={styles.title}>¿QUIÉN ERES?</Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre de usuario"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre completo"
-              value={nombreCompleto}
-              onChangeText={setNombreCompleto}
-            />
-
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setOpen(true)}
-            >
-              <Text>
-                {fecha
-                  ? fecha.toLocaleDateString()
-                  : "Seleccionar fecha de nacimiento"}
-              </Text>
-            </TouchableOpacity>
-
-            <DatePickerModal
-              locale="es"
-              mode="single"
-              visible={open}
-              onDismiss={() => setOpen(false)}
-              date={fecha}
-              onConfirm={onConfirm}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Correo electrónico"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              autoCapitalize="none"
-            />
-
-            {/* Requisitos de la contraseña */}
-            {password.length > 0 && (
-              <View style={styles.passwordRequirements}>
-                <Text
-                  style={{
-                    color: tieneLongitudValida ? "green" : "red",
-                  }}
-                >
-                  {tieneLongitudValida ? "✓" : "✗"} Más de 8 caracteres
+                <Text style={styles.descripcion}>
+                  Selecciona el tipo de cuenta que quieres crear.
                 </Text>
 
-                <Text
-                  style={{
-                    color: tieneMayuscula ? "green" : "red",
-                  }}
+                <TouchableOpacity
+                  style={[
+                    styles.tarjetaRol,
+                    rol === "parent" && styles.tarjetaSeleccionada,
+                  ]}
+                  onPress={() => setRol("parent")}
                 >
-                  {tieneMayuscula ? "✓" : "✗"} Una letra mayúscula
-                </Text>
+                  <Text style={styles.nombreRol}>Padre / Tutor</Text>
+                  <Text>Gestiona las tareas y recompensas de tu familia.</Text>
+                </TouchableOpacity>
 
-                <Text
-                  style={{
-                    color: tieneNumero ? "green" : "red",
-                  }}
+                <TouchableOpacity
+                  style={[
+                    styles.tarjetaRol,
+                    rol === "child" && styles.tarjetaSeleccionada,
+                  ]}
+                  onPress={() => setRol("child")}
                 >
-                  {tieneNumero ? "✓" : "✗"} Un número
-                </Text>
+                  <Text style={styles.nombreRol}>Hijo / Hija</Text>
+                  <Text>Completa tareas y consigue recompensas.</Text>
+                </TouchableOpacity>
+
+                <Button
+                  title="Continuar"
+                  onPress={() => {
+                    if (!rol) {
+                      mostrarAlerta(
+                        "Selecciona un rol",
+                        "Debes elegir el tipo de cuenta.",
+                      );
+                      return;
+                    }
+
+                    setPaso(2);
+                  }}
+                />
               </View>
+            ) : (
+              <>
+                <Text style={styles.title}>DATOS PERSONALES</Text>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nombre de usuario"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nombre completo"
+                  value={nombreCompleto}
+                  onChangeText={setNombreCompleto}
+                />
+
+                <TouchableOpacity
+                  style={styles.input}
+                  onPress={() => setOpen(true)}
+                >
+                  <Text>
+                    {fecha
+                      ? fecha.toLocaleDateString()
+                      : "Seleccionar fecha de nacimiento"}
+                  </Text>
+                </TouchableOpacity>
+
+                <DatePickerModal
+                  locale="es"
+                  mode="single"
+                  visible={open}
+                  onDismiss={() => setOpen(false)}
+                  date={fecha}
+                  onConfirm={onConfirm}
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Contraseña"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  autoCapitalize="none"
+                />
+
+                {/* Requisitos de la contraseña */}
+                {password.length > 0 && (
+                  <View style={styles.passwordRequirements}>
+                    <Text
+                      style={{
+                        color: tieneLongitudValida ? "green" : "red",
+                      }}
+                    >
+                      {tieneLongitudValida ? "✓" : "✗"} Más de 8 caracteres
+                    </Text>
+
+                    <Text
+                      style={{
+                        color: tieneMayuscula ? "green" : "red",
+                      }}
+                    >
+                      {tieneMayuscula ? "✓" : "✗"} Una letra mayúscula
+                    </Text>
+
+                    <Text
+                      style={{
+                        color: tieneNumero ? "green" : "red",
+                      }}
+                    >
+                      {tieneNumero ? "✓" : "✗"} Un número
+                    </Text>
+                  </View>
+                )}
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Repetir contraseña"
+                  secureTextEntry
+                  value={repeatPassword}
+                  onChangeText={setRepeatPassword}
+                  autoCapitalize="none"
+                />
+
+                {repeatPassword.length > 0 && (
+                  <Text
+                    style={{
+                      color: password === repeatPassword ? "green" : "red",
+                      marginBottom: 12,
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    {password === repeatPassword
+                      ? "✓ Las contraseñas coinciden"
+                      : "✗ Las contraseñas no coinciden"}
+                  </Text>
+                )}
+
+                <Button
+                  title="Crear"
+                  style={styles.createButton}
+                  onPress={crearCuenta}
+                />
+              </>
             )}
-
-            <TextInput
-              style={styles.input}
-              placeholder="Repetir contraseña"
-              secureTextEntry
-              value={repeatPassword}
-              onChangeText={setRepeatPassword}
-              autoCapitalize="none"
-            />
-
-            {repeatPassword.length > 0 && (
-              <Text
-                style={{
-                  color: password === repeatPassword ? "green" : "red",
-                  marginBottom: 12,
-                  alignSelf: "flex-start",
-                }}
-              >
-                {password === repeatPassword
-                  ? "✓ Las contraseñas coinciden"
-                  : "✗ Las contraseñas no coinciden"}
-              </Text>
-            )}
-
-            <Button
-              title="Crear"
-              style={styles.createButton}
-              onPress={crearCuenta}
-            />
           </View>
           {alerta}
         </View>
@@ -295,5 +348,39 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     resizeMode: "contain",
+  },
+
+  selectorRol: {
+    width: "100%",
+    alignItems: "center",
+  },
+
+  descripcion: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 25,
+    color: "#666",
+  },
+
+  tarjetaRol: {
+    width: "100%",
+    padding: 20,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: "#ddd",
+    marginBottom: 20,
+    backgroundColor: "#F4FAF4",
+  },
+
+  tarjetaSeleccionada: {
+    borderColor: "#66BB6A",
+    backgroundColor: "#E8F5E9",
+  },
+
+  nombreRol: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#2E7D32",
   },
 });

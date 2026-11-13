@@ -4,15 +4,7 @@ import {
   deleteUser,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  runTransaction,
-  Timestamp,
-  where,
-} from "firebase/firestore";
+import { doc, runTransaction, Timestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
 type RegisterUserParams = {
@@ -21,6 +13,7 @@ type RegisterUserParams = {
   fecha: Date;
   email: string;
   password: string;
+  role: "parent" | "child";
 };
 type LoginUserParams = {
   email: string;
@@ -52,6 +45,7 @@ export const registerUser = async ({
   fecha,
   email,
   password,
+  role,
 }: RegisterUserParams) => {
   const normalizedUsername = username.trim().toLowerCase();
 
@@ -119,6 +113,8 @@ export const registerUser = async ({
         email: user.email,
         fechaNacimiento: Timestamp.fromDate(fecha),
         createdAt: Timestamp.now(),
+        role: role,
+        familyId: null,
       });
     });
   } catch (error) {
@@ -138,31 +134,22 @@ export const registerUser = async ({
   return user;
 };
 
-
-export const loginUser = async ({
-  email,
-  password,
-}: LoginUserParams) => {
-
+export const loginUser = async ({ email, password }: LoginUserParams) => {
   const normalizedEmail = email.trim();
 
   if (!normalizedEmail || !password) {
-    throw new Error(
-      "Debes indicar el correo electrónico y la contraseña."
-    );
+    throw new Error("Debes indicar el correo electrónico y la contraseña.");
   }
 
   try {
     const userCredential = await signInWithEmailAndPassword(
       auth,
       normalizedEmail,
-      password
+      password,
     );
 
     return userCredential.user;
-
   } catch (error) {
-
     if (error instanceof FirebaseError) {
       switch (error.code) {
         case "auth/invalid-credential":
@@ -175,4 +162,3 @@ export const loginUser = async ({
     throw error;
   }
 };
-
