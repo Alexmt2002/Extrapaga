@@ -34,6 +34,10 @@ export default function useRegistro() {
   const tieneMayuscula = /[A-Z]/.test(password);
   const tieneNumero = /[0-9]/.test(password);
 
+
+const [cargando, setCargando] = useState(false);
+
+
   return {
     username,
     setUsername,
@@ -71,5 +75,8 @@ export default function useRegistro() {
     tieneLongitudValida,
     tieneMayuscula,
     tieneNumero,
+
+    cargando,
+    setCargando,
   };
 }

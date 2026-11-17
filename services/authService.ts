@@ -2,6 +2,8 @@ import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   deleteUser,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { doc, runTransaction, Timestamp } from "firebase/firestore";
@@ -14,6 +16,10 @@ type RegisterUserParams = {
   email: string;
   password: string;
   role: "parent" | "child";
+  avatar: string | null;
+  opcionFamilia: "crear" | "unirse" | null;
+  nombreFamilia: string;
+  codigoFamilia: string;
 };
 type LoginUserParams = {
   email: string;
@@ -46,6 +52,10 @@ export const registerUser = async ({
   email,
   password,
   role,
+  avatar,
+  opcionFamilia,
+  nombreFamilia,
+  codigoFamilia,
 }: RegisterUserParams) => {
   const normalizedUsername = username.trim().toLowerCase();
 
@@ -107,14 +117,38 @@ export const registerUser = async ({
       });
 
       // Guardar el perfil
+
       transaction.set(userRef, {
         username: normalizedUsername,
         nombreCompleto: nombreCompleto.trim(),
         email: user.email,
         fechaNacimiento: Timestamp.fromDate(fecha),
         createdAt: Timestamp.now(),
-        role: role,
+
+        role,
+        avatar: avatar || "👤",
+        fotoURL: null,
+
         familyId: null,
+
+        configuracionFamiliaPendiente: {
+          opcion:
+            role === "parent"
+              ? opcionFamilia
+              : codigoFamilia.trim()
+                ? "unirse"
+                : null,
+
+          nombre:
+            role === "parent" && opcionFamilia === "crear"
+              ? nombreFamilia.trim()
+              : null,
+
+          codigo:
+            role === "child" || opcionFamilia === "unirse"
+              ? codigoFamilia.trim().toUpperCase() || null
+              : null,
+        },
       });
     });
   } catch (error) {
@@ -161,4 +195,26 @@ export const loginUser = async ({ email, password }: LoginUserParams) => {
 
     throw error;
   }
+};
+
+export const enviarVerificacion = async () => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("No hay ninguna sesión iniciada.");
+  }
+
+  if (user.emailVerified) {
+    return;
+  }
+
+  await sendEmailVerification(user);
+};
+
+export const recuperarPassword = async (email: string) => {
+  if (!email.trim()) {
+    throw new Error("Introduce tu correo electrónico.");
+  }
+
+  await sendPasswordResetEmail(auth, email.trim());
 };

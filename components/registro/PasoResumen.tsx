@@ -12,6 +12,7 @@ type PasoResumenProps = {
   opcionFamilia: "crear" | "unirse" | null;
   nombreFamilia: string;
   codigoFamilia: string;
+  cargando: boolean;
 
   onAtras: () => void;
   onCrearCuenta: () => void;
@@ -24,6 +25,7 @@ export default function PasoResumen({
   opcionFamilia,
   nombreFamilia,
   codigoFamilia,
+  cargando,
   onAtras,
   onCrearCuenta,
 }: PasoResumenProps) {
@@ -66,10 +68,12 @@ export default function PasoResumen({
           onPress={onAtras}
         />
 
+        
         <Button
-          title="Crear cuenta"
+          title={cargando ? "Creando cuenta..." : "Crear cuenta"}
           style={styles.botonContinuar}
           onPress={onCrearCuenta}
+          disabled={cargando}
         />
       </View>
     </View>

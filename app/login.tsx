@@ -4,6 +4,7 @@ import { Colors } from "@/constants/theme";
 import { loginUser } from "@/services/authService";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { reload } from "firebase/auth";
 import {
   Image,
   StyleSheet,
@@ -11,6 +12,7 @@ import {
   TextInput,
   useWindowDimensions,
   View,
+  TouchableOpacity,
 } from "react-native";
 
 export default function Login() {
@@ -28,8 +30,16 @@ export default function Login() {
     }
 
     try {
-      await loginUser({ email, password });
-      mostrarAlerta("Felicidades", "Has iniciado sesión correctamente.");
+      const user = await loginUser({ email, password });
+
+      // Actualizar el estado de verificación desde Firebase
+      await reload(user);
+
+      if (!user.emailVerified) {
+        router.replace("/verificarCorreo");
+        return;
+      }
+
       router.replace("/perfil");
     } catch (error) {
       mostrarAlerta(
@@ -65,8 +75,12 @@ export default function Login() {
           value={password}
           onChangeText={setPassword}
         />
+        <TouchableOpacity style={styles.forgotText} onPress={() => router.push("/recuperarPassword")}>
+          <Text style={{ color: "#2E7D32", textAlign: "right" }}>
+            ¿Has olvidado tu contraseña?
+          </Text>
+        </TouchableOpacity>
 
-        <Text style={styles.forgotText}>Recuperar contraseña</Text>
 
         <View style={styles.bottomContainer}>
           <Button

@@ -6,7 +6,7 @@ import PasoResumen from "@/components/registro/PasoResumen";
 import PasoRol from "@/components/registro/PasoRol";
 import { styles } from "@/components/registro/registroStyle";
 import useRegistro from "@/components/registro/useRegistro";
-import { registerUser } from "@/services/authService";
+import { enviarVerificacion, registerUser } from "@/services/authService";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import {
@@ -15,57 +15,55 @@ import {
   Platform,
   ScrollView,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 
 export default function CrearCuenta() {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 600;
 
-const { width } = useWindowDimensions();
-const isMobile = width < 600;
+  const {
+    username,
+    setUsername,
+    nombreCompleto,
+    setNombreCompleto,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    repeatPassword,
+    setRepeatPassword,
+    open,
+    setOpen,
+    fecha,
+    setFecha,
+    paso,
+    setPaso,
+    rol,
+    setRol,
+    avatar,
+    setAvatar,
+    fotoPerfil,
+    setFotoPerfil,
+    nombreFamilia,
+    setNombreFamilia,
+    codigoFamilia,
+    setCodigoFamilia,
+    opcionFamilia,
+    setOpcionFamilia,
+    tieneLongitudValida,
+    tieneMayuscula,
+    tieneNumero,
+    cargando,
+    setCargando,
+  } = useRegistro();
 
-const {
-  username,
-  setUsername,
-  nombreCompleto,
-  setNombreCompleto,
-  email,
-  setEmail,
-  password,
-  setPassword,
-  repeatPassword,
-  setRepeatPassword,
-  open,
-  setOpen,
-  fecha,
-  setFecha,
-  paso,
-  setPaso,
-  rol,
-  setRol,
-  avatar,
-  setAvatar,
-  fotoPerfil,
-  setFotoPerfil,
-  nombreFamilia,
-  setNombreFamilia,
-  codigoFamilia,
-  setCodigoFamilia,
-  opcionFamilia,
-  setOpcionFamilia,
-  tieneLongitudValida,
-  tieneMayuscula,
-  tieneNumero,
-} = useRegistro();
- 
   const { mostrarAlerta, alerta } = useAlerta();
-  
 
   const onConfirm = (params: { date?: Date }) => {
     setOpen(false);
     setFecha(params.date);
   };
-
- 
 
   const continuarDatosPersonales = () => {
     // Comprobar los campos obligatorios
@@ -125,37 +123,14 @@ const {
   };
 
   const crearCuenta = async () => {
-    if (!username.trim() || !nombreCompleto.trim() || !email.trim()) {
-      mostrarAlerta(
-        "Campos obligatorios",
-        "Completa todos los datos personales.",
-      );
+    if (cargando) return;
+
+    if (!rol || !fecha) {
+      mostrarAlerta("Datos incompletos", "Revisa los datos del registro.");
       return;
     }
 
-    if (!fecha) {
-      mostrarAlerta("Fecha obligatoria", "Selecciona tu fecha de nacimiento.");
-      return;
-    }
-
-    if (!tieneLongitudValida || !tieneMayuscula || !tieneNumero) {
-      mostrarAlerta(
-        "Contraseña no válida",
-        [
-          !tieneLongitudValida ? "• Debe tener más de 8 caracteres." : "",
-          !tieneMayuscula ? "• Debe incluir una letra mayúscula." : "",
-          !tieneNumero ? "• Debe incluir al menos un número." : "",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-      );
-      return;
-    }
-
-    if (password !== repeatPassword) {
-      mostrarAlerta("Error", "Las contraseñas no coinciden.");
-      return;
-    }
+    setCargando(true);
 
     try {
       await registerUser({
@@ -164,21 +139,36 @@ const {
         fecha,
         email,
         password,
-        role: rol!,
+        role: rol,
+        avatar,
+        opcionFamilia,
+        nombreFamilia,
+        codigoFamilia,
       });
-
-      mostrarAlerta("Éxito", "Tu cuenta se ha creado correctamente.");
-
-      router.push("/perfil");
     } catch (error) {
       mostrarAlerta(
-        "Error",
+        "Error al crear la cuenta",
         error instanceof Error
           ? error.message
           : "No se ha podido crear la cuenta.",
       );
+
+      setCargando(false);
+      return;
     }
+
+    // La cuenta ya existe. Intentamos enviar la verificación.
+    try {
+      await enviarVerificacion();
+    } catch (error) {
+      console.error("No se pudo enviar la verificación:", error);
+      // El usuario podrá solicitar otro correo en la siguiente pantalla.
+    }
+
+    setCargando(false);
+    router.replace("/verificarCorreo");
   };
+
   const seleccionarFoto = async () => {
     try {
       const resultado = await ImagePicker.launchImageLibraryAsync({
@@ -299,6 +289,7 @@ const {
                 opcionFamilia={opcionFamilia}
                 nombreFamilia={nombreFamilia}
                 codigoFamilia={codigoFamilia}
+                cargando={cargando}
                 onAtras={() => setPaso(4)}
                 onCrearCuenta={crearCuenta}
               />
