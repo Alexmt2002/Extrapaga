@@ -1,39 +1,37 @@
-
-import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
 import { router } from "expo-router";
+import { reload } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Image, ScrollView, View, Text, TouchableOpacity} from "react-native";
 
-import { auth, db } from "@/services/firebase";
-import { crearFamilia } from "@/services/familyService";
 import { useAlerta } from "@/components/AlertaPersonalizada";
+import PasoFamilia from "@/components/registro/PasoFamilia";
+import { styles } from "@/components/registro/registroStyle";
+import { crearFamilia, solicitarUnionFamilia } from "@/services/familyService";
+import { auth, db } from "@/services/firebase";
 
-type ConfiguracionPendiente = {
-  opcion: "crear" | "unirse" | null;
-  nombre: string | null;
-  codigo: string | null;
-  
-};
+type Rol = "parent" | "child";
 
 export default function ConfigurarFamilia() {
-  const [configuracion, setConfiguracion] =
-    useState<ConfiguracionPendiente | null>(null);
+  const [rol, setRol] = useState<Rol | null>(null);
 
-  const [nombre, setNombre] = useState("");
+  const [opcionFamilia, setOpcionFamilia] = useState<"crear" | "unirse" | null>(
+    null,
+  );
+
+  const [nombreFamilia, setNombreFamilia] = useState("");
+  const [codigoFamilia, setCodigoFamilia] = useState("");
+
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
 
   const { mostrarAlerta, alerta } = useAlerta();
 
+  const [solicitudEnviada, setSolicitudEnviada] = useState(false);
+
+  // Cargar el rol del usuario desde Firestore
   useEffect(() => {
-    const cargarDatos = async () => {
+    const cargarUsuario = async () => {
       try {
         const user = auth.currentUser;
 
@@ -41,6 +39,8 @@ export default function ConfigurarFamilia() {
           router.replace("/login");
           return;
         }
+
+        await reload(user);
 
         if (!user.emailVerified) {
           router.replace("/verificarCorreo");
@@ -60,167 +60,165 @@ export default function ConfigurarFamilia() {
           return;
         }
 
-        const pendiente =
-          datos.configuracionFamiliaPendiente as
-            | ConfiguracionPendiente
-            | undefined;
+        if (datos.role !== "parent" && datos.role !== "child") {
+          throw new Error("El rol de tu cuenta no es válido.");
+        }
 
-        setConfiguracion(
-          pendiente ?? {
-            opcion: null,
-            nombre: null,
-            codigo: null,
-          }
-        );
-
-        setNombre(pendiente?.nombre ?? "");
+        setRol(datos.role);
       } catch (error) {
         mostrarAlerta(
           "Error",
           error instanceof Error
             ? error.message
-            : "No se han podido cargar los datos."
+            : "No se ha podido cargar tu perfil.",
         );
       } finally {
         setCargando(false);
       }
     };
 
-    cargarDatos();
+    cargarUsuario();
   }, []);
 
-  const guardarFamilia = async () => {
-    if (guardando) return;
+  // Crear familia o solicitar unirse
+  const continuarFamilia = async () => {
+    if (guardando || !rol) return;
 
-    setGuardando(true);
+    if (rol === "parent") {
+      if (!opcionFamilia) {
+        mostrarAlerta(
+          "Selecciona una opción",
+          "Elige entre crear una familia o unirte a una.",
+        );
+        return;
+      }
 
-    try {
-      await crearFamilia(nombre);
+      if (opcionFamilia === "crear") {
+        if (!nombreFamilia.trim()) {
+          mostrarAlerta(
+            "Nombre obligatorio",
+            "Introduce el nombre de tu familia.",
+          );
+          return;
+        }
 
-      router.replace("/perfil");
-    } catch (error) {
-      mostrarAlerta(
-        "Error",
-        error instanceof Error
-          ? error.message
-          : "No se ha podido crear la familia."
-      );
-    } finally {
-      setGuardando(false);
+        setGuardando(true);
+
+        try {
+          await crearFamilia(nombreFamilia);
+          router.replace("/perfil");
+        } catch (error) {
+          mostrarAlerta(
+            "Error",
+            error instanceof Error
+              ? error.message
+              : "No se ha podido crear la familia.",
+          );
+        } finally {
+          setGuardando(false);
+        }
+
+        return;
+      }
     }
+
+    // Unión mediante código: se conectará al servicio
+    // de invitaciones y solicitudes de aprobación.
+
+    if (codigoFamilia.trim()) {
+      setGuardando(true);
+
+      try {
+        await solicitarUnionFamilia(codigoFamilia);
+        setSolicitudEnviada(true);
+      } catch (error) {
+        mostrarAlerta(
+          "Error al solicitar acceso",
+          error instanceof Error
+            ? error.message
+            : "No se ha podido enviar la solicitud.",
+        );
+      } finally {
+        setGuardando(false);
+      }
+
+      return;
+    }
+
+    if (rol === "parent") {
+      mostrarAlerta("Código obligatorio", "Introduce el código de invitación.");
+      return;
+    }
+
+    // Los hijos pueden continuar sin familia
+    router.replace("/perfil");
   };
 
-  if (cargando) {
+  if (cargando || guardando) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#5EC287" />
+        {alerta}
       </View>
     );
   }
 
+  if (!rol) {
+    return <View style={styles.container}>{alerta}</View>;
+  }
+
+if (solicitudEnviada) {
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>CONFIGURAR FAMILIA</Text>
+      <Text style={styles.title}>
+        SOLICITUD ENVIADA
+      </Text>
 
-      {configuracion?.opcion === "crear" ? (
-        <>
-          <Text style={styles.descripcion}>
-            Introduce el nombre de la familia que quieres crear.
-          </Text>
+      <Text style={styles.descripcion}>
+        Tu solicitud se ha enviado correctamente.
+        Un administrador de la familia tendrá
+        que aprobarla.
+      </Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Nombre de la familia"
-            value={nombre}
-            onChangeText={setNombre}
-            maxLength={60}
-          />
-
-          <TouchableOpacity
-            style={styles.boton}
-            disabled={guardando}
-            onPress={guardarFamilia}
-          >
-            {guardando ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.textoBoton}>
-                Crear familia
-              </Text>
-            )}
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <Text style={styles.descripcion}>
-            Tu cuenta está verificada. Próximamente podrás
-            solicitar unirte a una familia existente.
-          </Text>
-
-          <Text style={styles.descripcion}>
-            {configuracion?.codigo
-              ? `Código introducido: ${configuracion.codigo}`
-              : "Todavía no has introducido un código familiar."}
-          </Text>
-        </>
-      )}
-
-      <TouchableOpacity onPress={() => router.replace("/perfil")}>
-        <Text style={styles.enlace}>Ir a mi perfil</Text>
+      <TouchableOpacity
+        onPress={() => router.replace("/perfil")}
+      >
+        <Text style={{ color: "#2E7D32", fontSize: 16 }}>
+          Ir a mi perfil
+        </Text>
       </TouchableOpacity>
-
-      {alerta}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 25,
-    backgroundColor: "#fff",
-  },
-  titulo: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  descripcion: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  input: {
-    width: "100%",
-    maxWidth: 400,
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-  },
-  boton: {
-    backgroundColor: "#5EC287",
-    borderRadius: 10,
-    padding: 15,
-    width: "100%",
-    maxWidth: 350,
-    alignItems: "center",
-  },
-  textoBoton: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "bold",
-  },
-  enlace: {
-    color: "#2E7D32",
-    marginTop: 25,
-    textDecorationLine: "underline",
-  },
-});
+
+  return (
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.container}>
+        <View style={[styles.content, { width: "100%" }]}>
+          <Image
+            source={require("../assets/images/ImagenLogo.png")}
+            style={styles.logo}
+          />
+
+          <PasoFamilia
+            rol={rol}
+            opcionFamilia={opcionFamilia}
+            setOpcionFamilia={setOpcionFamilia}
+            nombreFamilia={nombreFamilia}
+            setNombreFamilia={setNombreFamilia}
+            codigoFamilia={codigoFamilia}
+            setCodigoFamilia={setCodigoFamilia}
+            onContinuar={continuarFamilia}
+          />
+        </View>
+
+        {alerta}
+      </View>
+    </ScrollView>
+  );
+}
