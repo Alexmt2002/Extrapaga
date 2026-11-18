@@ -1,4 +1,3 @@
-
 import { Text, View } from "react-native";
 
 import Button from "@/components/boton";
@@ -9,9 +8,6 @@ type PasoResumenProps = {
   email: string;
   rol: "parent" | "child" | null;
 
-  opcionFamilia: "crear" | "unirse" | null;
-  nombreFamilia: string;
-  codigoFamilia: string;
   cargando: boolean;
 
   onAtras: () => void;
@@ -22,9 +18,6 @@ export default function PasoResumen({
   username,
   email,
   rol,
-  opcionFamilia,
-  nombreFamilia,
-  codigoFamilia,
   cargando,
   onAtras,
   onCrearCuenta,
@@ -37,28 +30,13 @@ export default function PasoResumen({
         Comprueba que tu información sea correcta.
       </Text>
 
-      <Text style={styles.textoInformativo}>
-        Usuario: {username}
-      </Text>
+      <Text style={styles.textoInformativo}>Usuario: {username}</Text>
 
       <Text style={styles.textoInformativo}>
-        Tipo de cuenta:{" "}
-        {rol === "parent" ? "Padre/Tutor" : "Hijo/Hija"}
+        Tipo de cuenta: {rol === "parent" ? "Padre/Tutor" : "Hijo/Hija"}
       </Text>
 
-      <Text style={styles.textoInformativo}>
-        Correo: {email}
-      </Text>
-
-      <Text style={styles.textoInformativo}>
-        {rol === "parent"
-          ? opcionFamilia === "crear"
-            ? `Crear familia: ${nombreFamilia}`
-            : `Unirse como Padre/Tutor. Código: ${codigoFamilia}`
-          : codigoFamilia.trim()
-            ? `Unirse como Hijo/Hija. Código: ${codigoFamilia}`
-            : "Sin familia por ahora"}
-      </Text>
+      <Text style={styles.textoInformativo}>Correo: {email}</Text>
 
       <View style={styles.botonesNavegacion}>
         <Button
@@ -68,7 +46,6 @@ export default function PasoResumen({
           onPress={onAtras}
         />
 
-        
         <Button
           title={cargando ? "Creando cuenta..." : "Crear cuenta"}
           style={styles.botonContinuar}

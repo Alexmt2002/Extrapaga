@@ -1,10 +1,4 @@
-
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import Button from "@/components/boton";
 import { styles } from "./registroStyle";
@@ -22,7 +16,7 @@ type PasoFamiliaProps = {
   setCodigoFamilia: (value: string) => void;
 
   onContinuar: () => void;
-  onAtras: () => void;
+  onAtras?: () => void;
 };
 
 export default function PasoFamilia({
@@ -65,9 +59,7 @@ export default function PasoFamilia({
             onPress={() => setOpcionFamilia("unirse")}
           >
             <Text style={styles.nombreRol}>Unirme a una familia</Text>
-            <Text>
-              Únete como tutor a una familia existente.
-            </Text>
+            <Text>Únete como tutor a una familia existente.</Text>
           </TouchableOpacity>
 
           {opcionFamilia === "crear" && (
@@ -102,8 +94,8 @@ export default function PasoFamilia({
       ) : (
         <>
           <Text style={styles.descripcion}>
-            Introduce el código de invitación que te ha proporcionado
-            tu familia.
+            Introduce el código de invitación que te ha proporcionado tu
+            familia.
           </Text>
 
           <TextInput
@@ -116,28 +108,30 @@ export default function PasoFamilia({
           />
 
           <Text style={styles.textoInformativo}>
-            Tu solicitud necesitará la aprobación de un administrador
-            de la familia.
+            Tu solicitud necesitará la aprobación de un administrador de la
+            familia.
           </Text>
 
           <Text style={styles.textoInformativo}>
-            Puedes dejar el código vacío y solicitar unirte a una
-            familia más adelante.
+            Puedes dejar el código vacío y solicitar unirte a una familia más
+            adelante.
           </Text>
         </>
       )}
 
       <View style={styles.botonesNavegacion}>
-        <Button
-          title="Atrás"
-          style={styles.botonAtras}
-          textStyle={styles.textoBotonAtras}
-          onPress={onAtras}
-        />
+        {onAtras && (
+          <Button
+            title="Atrás"
+            style={styles.botonAtras}
+            textStyle={styles.textoBotonAtras}
+            onPress={onAtras}
+          />
+        )}
 
         <Button
           title="Continuar"
-          style={styles.botonContinuar}
+          style={styles.botonContinuar1}
           onPress={onContinuar}
         />
       </View>

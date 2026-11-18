@@ -17,9 +17,6 @@ type RegisterUserParams = {
   password: string;
   role: "parent" | "child";
   avatar: string | null;
-  opcionFamilia: "crear" | "unirse" | null;
-  nombreFamilia: string;
-  codigoFamilia: string;
 };
 type LoginUserParams = {
   email: string;
@@ -53,9 +50,6 @@ export const registerUser = async ({
   password,
   role,
   avatar,
-  opcionFamilia,
-  nombreFamilia,
-  codigoFamilia,
 }: RegisterUserParams) => {
   const normalizedUsername = username.trim().toLowerCase();
 
@@ -130,25 +124,6 @@ export const registerUser = async ({
         fotoURL: null,
 
         familyId: null,
-
-        configuracionFamiliaPendiente: {
-          opcion:
-            role === "parent"
-              ? opcionFamilia
-              : codigoFamilia.trim()
-                ? "unirse"
-                : null,
-
-          nombre:
-            role === "parent" && opcionFamilia === "crear"
-              ? nombreFamilia.trim()
-              : null,
-
-          codigo:
-            role === "child" || opcionFamilia === "unirse"
-              ? codigoFamilia.trim().toUpperCase() || null
-              : null,
-        },
       });
     });
   } catch (error) {

@@ -125,6 +125,11 @@ export const styles = StyleSheet.create({
     width: "auto",
     backgroundColor: "#5EC287",
   },
+  botonContinuar1: {
+    maxWidth: "100%",
+    width: "100%",
+    backgroundColor: "#5EC287",
+  },
 
   avatarPrincipal: {
     width: 130,

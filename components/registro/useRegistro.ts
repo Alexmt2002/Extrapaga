@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 export default function useRegistro() {
@@ -21,22 +20,12 @@ export default function useRegistro() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
 
-  // Familia
-  const [nombreFamilia, setNombreFamilia] = useState("");
-  const [codigoFamilia, setCodigoFamilia] = useState("");
-
-  const [opcionFamilia, setOpcionFamilia] = useState<
-    "crear" | "unirse" | null
-  >(null);
-
   // Comprobaciones de la contraseña
   const tieneLongitudValida = password.length > 8;
   const tieneMayuscula = /[A-Z]/.test(password);
   const tieneNumero = /[0-9]/.test(password);
 
-
-const [cargando, setCargando] = useState(false);
-
+  const [cargando, setCargando] = useState(false);
 
   return {
     username,
@@ -64,13 +53,6 @@ const [cargando, setCargando] = useState(false);
     setAvatar,
     fotoPerfil,
     setFotoPerfil,
-
-    nombreFamilia,
-    setNombreFamilia,
-    codigoFamilia,
-    setCodigoFamilia,
-    opcionFamilia,
-    setOpcionFamilia,
 
     tieneLongitudValida,
     tieneMayuscula,

@@ -1,7 +1,6 @@
 import { useAlerta } from "@/components/AlertaPersonalizada";
 import PasoAvatar from "@/components/registro/PasoAvatar";
 import PasoDatos from "@/components/registro/PasoDatos";
-import PasoFamilia from "@/components/registro/PasoFamilia";
 import PasoResumen from "@/components/registro/PasoResumen";
 import PasoRol from "@/components/registro/PasoRol";
 import { styles } from "@/components/registro/registroStyle";
@@ -45,12 +44,6 @@ export default function CrearCuenta() {
     setAvatar,
     fotoPerfil,
     setFotoPerfil,
-    nombreFamilia,
-    setNombreFamilia,
-    codigoFamilia,
-    setCodigoFamilia,
-    opcionFamilia,
-    setOpcionFamilia,
     tieneLongitudValida,
     tieneMayuscula,
     tieneNumero,
@@ -141,9 +134,6 @@ export default function CrearCuenta() {
         password,
         role: rol,
         avatar,
-        opcionFamilia,
-        nombreFamilia,
-        codigoFamilia,
       });
     } catch (error) {
       mostrarAlerta(
@@ -185,36 +175,6 @@ export default function CrearCuenta() {
     } catch (error) {
       mostrarAlerta("Error", "No se ha podido seleccionar la fotografía.");
     }
-  };
-
-  const continuarFamilia = () => {
-    if (rol === "parent") {
-      if (!opcionFamilia) {
-        mostrarAlerta(
-          "Selecciona una opción",
-          "Debes elegir entre crear una familia o unirte a una.",
-        );
-        return;
-      }
-
-      if (opcionFamilia === "crear" && !nombreFamilia.trim()) {
-        mostrarAlerta(
-          "Nombre obligatorio",
-          "Introduce el nombre de tu familia.",
-        );
-        return;
-      }
-
-      if (opcionFamilia === "unirse" && !codigoFamilia.trim()) {
-        mostrarAlerta(
-          "Código obligatorio",
-          "Introduce el código de invitación.",
-        );
-        return;
-      }
-    }
-
-    setPaso(5);
   };
 
   return (
@@ -269,28 +229,13 @@ export default function CrearCuenta() {
                 onAtras={() => setPaso(2)}
                 onContinuar={() => setPaso(4)}
               />
-            ) : paso === 4 ? (
-              <PasoFamilia
-                rol={rol}
-                opcionFamilia={opcionFamilia}
-                setOpcionFamilia={setOpcionFamilia}
-                nombreFamilia={nombreFamilia}
-                setNombreFamilia={setNombreFamilia}
-                codigoFamilia={codigoFamilia}
-                setCodigoFamilia={setCodigoFamilia}
-                onAtras={() => setPaso(3)}
-                onContinuar={continuarFamilia}
-              />
             ) : (
               <PasoResumen
                 username={username}
                 email={email}
                 rol={rol}
-                opcionFamilia={opcionFamilia}
-                nombreFamilia={nombreFamilia}
-                codigoFamilia={codigoFamilia}
                 cargando={cargando}
-                onAtras={() => setPaso(4)}
+                onAtras={() => setPaso(3)}
                 onCrearCuenta={crearCuenta}
               />
             )}
