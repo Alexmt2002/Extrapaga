@@ -1,11 +1,11 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { useAlerta } from "@/components/AlertaPersonalizada";
@@ -31,12 +31,7 @@ export default function VerificarCorreo() {
       await reload(user);
 
       if (user.emailVerified) {
-        mostrarAlerta(
-          "Correo verificado",
-          "Tu correo se ha verificado correctamente.",
-        );
-
-        router.replace("/perfil");
+        router.replace("/configurarFamilia");
       } else {
         mostrarAlerta(
           "Correo sin verificar",

@@ -66,7 +66,7 @@ export default function PasoFamilia({
           >
             <Text style={styles.nombreRol}>Unirme a una familia</Text>
             <Text>
-              Únete como padre o tutor a una familia existente.
+              Únete como tutor a una familia existente.
             </Text>
           </TouchableOpacity>
 
