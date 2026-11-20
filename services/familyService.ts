@@ -362,6 +362,7 @@ export const responderSolicitudFamilia = async (
     });
   });
 };
+
 export const obtenerMiFamilia = async (): Promise<DatosMiFamilia | null> => {
   const user = auth.currentUser;
 
@@ -372,25 +373,27 @@ export const obtenerMiFamilia = async (): Promise<DatosMiFamilia | null> => {
   await reload(user);
 
   if (!user.emailVerified) {
-    throw new Error("Debes verificar tu correo electrónico.");
+    throw new Error("Debes verificar tu correo.");
   }
 
-  const usuarioRef = doc(db, "users", user.uid);
-  const usuarioDoc = await getDoc(usuarioRef);
+  await getIdToken(user, true);
+
+  // 1. Obtener los datos de mi usuario
+  const usuarioDoc = await getDoc(doc(db, "users", user.uid));
 
   if (!usuarioDoc.exists()) {
     throw new Error("No se ha encontrado tu perfil.");
   }
 
-  const datosUsuario = usuarioDoc.data();
-  const familyId = datosUsuario.familyId;
+  const misDatos = usuarioDoc.data();
+  const familyId = misDatos.familyId;
 
   if (!familyId || typeof familyId !== "string") {
     return null;
   }
 
-  const familiaRef = doc(db, "families", familyId);
-  const familiaDoc = await getDoc(familiaRef);
+  // 2. Obtener mi familia
+  const familiaDoc = await getDoc(doc(db, "families", familyId));
 
   if (!familiaDoc.exists()) {
     throw new Error("No se ha encontrado tu familia.");
@@ -405,18 +408,74 @@ export const obtenerMiFamilia = async (): Promise<DatosMiFamilia | null> => {
     throw new Error("No perteneces a esta familia.");
   }
 
+  // 3. Crear o actualizar mi perfil familiar visible
+  const miNombre = misDatos.nombreCompleto || "Mi cuenta";
+  const miAvatar = misDatos.avatar || "👤";
+
+  const miPerfilRef = doc(db, "publicProfiles", user.uid);
+
+  console.log("1. Intentando leer mi perfil público");
+
+  const usuarioActual = auth.currentUser;
+
+  if (!usuarioActual) {
+    throw new Error("No hay ningún usuario autenticado.");
+  }
+
+  const tokenActual = await usuarioActual.getIdTokenResult(true);
+
+  console.log("UID autenticado AHORA:", usuarioActual.uid);
+  console.log("UID del documento:", miPerfilRef.id);
+  console.log("¿Coinciden?", usuarioActual.uid === miPerfilRef.id);
+  console.log("Correo verificado AHORA:", tokenActual.claims.email_verified);
+  console.log("Proyecto Firebase:", db.app.options.projectId);
+
+  const miPerfilDoc = await getDoc(miPerfilRef);
+
+  console.log("2. Mi perfil público se ha leído correctamente");
+
+  if (
+    !miPerfilDoc.exists() ||
+    miPerfilDoc.data().nombre !== miNombre ||
+    miPerfilDoc.data().avatar !== miAvatar
+  ) {
+    console.log("3. Intentando guardar mi perfil público");
+
+    await setDoc(miPerfilRef, {
+      nombre: miNombre,
+      avatar: miAvatar,
+    });
+
+    console.log("4. Mi perfil público se ha guardado correctamente");
+  }
+
+  // 4. Obtener el nombre y avatar de todos los miembros
+  const miembros = await Promise.all(
+    memberIds.map(async (uid): Promise<MiembroFamilia> => {
+      console.log("5. Intentando leer perfil familiar:", uid);
+
+      const perfilDoc = await getDoc(doc(db, "publicProfiles", uid));
+
+      console.log("6. Perfil familiar leído:", uid);
+
+      const perfil = perfilDoc.exists() ? perfilDoc.data() : null;
+
+      return {
+        uid,
+        nombre: perfil?.nombre ?? "Perfil pendiente",
+        avatar: perfil?.avatar ?? "👤",
+        esAdministrador: adminIds.includes(uid),
+      };
+    }),
+  );
+
   return {
     id: familiaDoc.id,
     nombre: familia.nombre,
     createdBy: familia.createdBy,
-
-    miembros: memberIds.map((uid) => ({
-      uid,
-      esAdministrador: adminIds.includes(uid),
-    })),
-
+    miembros,
     esAdministrador: adminIds.includes(user.uid),
-    miNombre: datosUsuario.nombreCompleto ?? "Mi cuenta",
-    miAvatar: datosUsuario.avatar ?? "👤",
+    miNombre,
+    miAvatar,
   };
 };
