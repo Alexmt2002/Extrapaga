@@ -62,7 +62,7 @@ export default function MiFamilia() {
           </Text>
 
           <Text style={styles.rolMiembro}>
-            {item.esAdministrador ? "Administrador" : "Miembro"}
+            {item.esAdministrador ? "Tutor" : "Hijo"}
           </Text>
         </View>
       </View>

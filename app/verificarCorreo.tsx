@@ -1,3 +1,4 @@
+import { sincronizarPerfilPublico } from "@/services/publicProfileService";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -31,6 +32,18 @@ export default function VerificarCorreo() {
       await reload(user);
 
       if (user.emailVerified) {
+        try {
+          await sincronizarPerfilPublico();
+        } catch (error) {
+          console.error("Error al sincronizar el perfil público:", error);
+
+          mostrarAlerta(
+            "Perfil pendiente",
+            "Tu correo está verificado, pero no se ha podido guardar el perfil público. Inténtalo de nuevo.",
+          );
+          return;
+        }
+
         router.replace("/configurarFamilia");
       } else {
         mostrarAlerta(

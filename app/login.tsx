@@ -2,17 +2,18 @@ import { useAlerta } from "@/components/AlertaPersonalizada";
 import Button from "@/components/boton";
 import { Colors } from "@/constants/theme";
 import { loginUser } from "@/services/authService";
+import { sincronizarPerfilPublico } from "@/services/publicProfileService";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import { reload } from "firebase/auth";
+import { useState } from "react";
 import {
   Image,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   useWindowDimensions,
   View,
-  TouchableOpacity,
 } from "react-native";
 
 export default function Login() {
@@ -39,6 +40,16 @@ export default function Login() {
         router.replace("/verificarCorreo");
         return;
       }
+
+      // Sincronizar el perfil público al iniciar sesión
+      try {
+        await sincronizarPerfilPublico();
+      } catch (error) {
+        console.error("No se pudo sincronizar el perfil público:", error);
+      }
+
+      // Mantener el acceso a la aplicación
+      router.replace("/perfil");
 
       router.replace("/perfil");
     } catch (error) {
@@ -75,12 +86,14 @@ export default function Login() {
           value={password}
           onChangeText={setPassword}
         />
-        <TouchableOpacity style={styles.forgotText} onPress={() => router.push("/recuperarPassword")}>
+        <TouchableOpacity
+          style={styles.forgotText}
+          onPress={() => router.push("/recuperarPassword")}
+        >
           <Text style={{ color: "#2E7D32", textAlign: "right" }}>
             ¿Has olvidado tu contraseña?
           </Text>
         </TouchableOpacity>
-
 
         <View style={styles.bottomContainer}>
           <Button

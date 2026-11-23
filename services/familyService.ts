@@ -412,43 +412,6 @@ export const obtenerMiFamilia = async (): Promise<DatosMiFamilia | null> => {
   const miNombre = misDatos.nombreCompleto || "Mi cuenta";
   const miAvatar = misDatos.avatar || "👤";
 
-  const miPerfilRef = doc(db, "publicProfiles", user.uid);
-
-  console.log("1. Intentando leer mi perfil público");
-
-  const usuarioActual = auth.currentUser;
-
-  if (!usuarioActual) {
-    throw new Error("No hay ningún usuario autenticado.");
-  }
-
-  const tokenActual = await usuarioActual.getIdTokenResult(true);
-
-  console.log("UID autenticado AHORA:", usuarioActual.uid);
-  console.log("UID del documento:", miPerfilRef.id);
-  console.log("¿Coinciden?", usuarioActual.uid === miPerfilRef.id);
-  console.log("Correo verificado AHORA:", tokenActual.claims.email_verified);
-  console.log("Proyecto Firebase:", db.app.options.projectId);
-
-  const miPerfilDoc = await getDoc(miPerfilRef);
-
-  console.log("2. Mi perfil público se ha leído correctamente");
-
-  if (
-    !miPerfilDoc.exists() ||
-    miPerfilDoc.data().nombre !== miNombre ||
-    miPerfilDoc.data().avatar !== miAvatar
-  ) {
-    console.log("3. Intentando guardar mi perfil público");
-
-    await setDoc(miPerfilRef, {
-      nombre: miNombre,
-      avatar: miAvatar,
-    });
-
-    console.log("4. Mi perfil público se ha guardado correctamente");
-  }
-
   // 4. Obtener el nombre y avatar de todos los miembros
   const miembros = await Promise.all(
     memberIds.map(async (uid): Promise<MiembroFamilia> => {
