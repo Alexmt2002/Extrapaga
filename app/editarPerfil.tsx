@@ -1,22 +1,21 @@
-
-import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
 import { router } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
+import { useAlerta } from "@/components/AlertaPersonalizada";
 import { auth, db } from "@/services/firebase";
 import { actualizarDatosPerfil } from "@/services/publicProfileService";
-import { useAlerta } from "@/components/AlertaPersonalizada";
 
 const avatares = ["👦", "👧", "👨", "👩", "🧑", "😊"];
 
@@ -43,9 +42,7 @@ export default function EditarPerfil() {
           return;
         }
 
-        const usuarioDoc = await getDoc(
-          doc(db, "users", user.uid)
-        );
+        const usuarioDoc = await getDoc(doc(db, "users", user.uid));
 
         if (!usuarioDoc.exists()) {
           throw new Error("No se ha encontrado tu perfil.");
@@ -55,9 +52,7 @@ export default function EditarPerfil() {
 
         const nombre = datos.nombreCompleto ?? "";
         const avatarActual =
-          typeof datos.avatar === "string"
-            ? datos.avatar
-            : "👤";
+          typeof datos.avatar === "string" ? datos.avatar : "👤";
 
         setNombreCompleto(nombre);
         setAvatar(avatarActual);
@@ -69,7 +64,7 @@ export default function EditarPerfil() {
           "Error",
           error instanceof Error
             ? error.message
-            : "No se han podido cargar tus datos."
+            : "No se han podido cargar tus datos.",
         );
       } finally {
         setCargando(false);
@@ -81,17 +76,13 @@ export default function EditarPerfil() {
 
   // Comprobar si el usuario ha cambiado algo
   const hayCambios =
-    nombreCompleto.trim() !== nombreOriginal ||
-    avatar !== avatarOriginal;
+    nombreCompleto.trim() !== nombreOriginal || avatar !== avatarOriginal;
 
   const guardarCambios = async () => {
     if (guardando || !hayCambios) return;
 
     if (!nombreCompleto.trim()) {
-      mostrarAlerta(
-        "Nombre obligatorio",
-        "Introduce tu nombre completo."
-      );
+      mostrarAlerta("Nombre obligatorio", "Introduce tu nombre completo.");
       return;
     }
 
@@ -106,7 +97,7 @@ export default function EditarPerfil() {
         "Error al guardar",
         error instanceof Error
           ? error.message
-          : "No se pudieron guardar los cambios."
+          : "No se pudieron guardar los cambios.",
       );
     } finally {
       setGuardando(false);
@@ -137,24 +128,18 @@ export default function EditarPerfil() {
         {/* Vista previa del avatar */}
         <View style={styles.vistaPrevia}>
           <View style={styles.avatarGrande}>
-            <Text style={styles.avatarGrandeTexto}>
-              {avatar}
-            </Text>
+            <Text style={styles.avatarGrandeTexto}>{avatar}</Text>
           </View>
 
           <Text style={styles.nombrePrevia}>
             {nombreCompleto.trim() || "Tu nombre"}
           </Text>
 
-          <Text style={styles.descripcion}>
-            Así te verá tu familia
-          </Text>
+          <Text style={styles.descripcion}>Así te verá tu familia</Text>
         </View>
 
         {/* Nombre */}
-        <Text style={styles.etiqueta}>
-          Nombre completo
-        </Text>
+        <Text style={styles.etiqueta}>Nombre completo</Text>
 
         <TextInput
           style={styles.input}
@@ -167,9 +152,7 @@ export default function EditarPerfil() {
         />
 
         {/* Avatares */}
-        <Text style={styles.etiqueta}>
-          Selecciona tu avatar
-        </Text>
+        <Text style={styles.etiqueta}>Selecciona tu avatar</Text>
 
         <View style={styles.listaAvatares}>
           {avatares.map((opcion) => (
@@ -179,13 +162,10 @@ export default function EditarPerfil() {
               onPress={() => setAvatar(opcion)}
               style={[
                 styles.tarjetaAvatar,
-                avatar === opcion &&
-                  styles.avatarSeleccionado,
+                avatar === opcion && styles.avatarSeleccionado,
               ]}
             >
-              <Text style={styles.emoji}>
-                {opcion}
-              </Text>
+              <Text style={styles.emoji}>{opcion}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -194,8 +174,7 @@ export default function EditarPerfil() {
         <TouchableOpacity
           style={[
             styles.botonGuardar,
-            (!hayCambios || guardando) &&
-              styles.botonDesactivado,
+            (!hayCambios || guardando) && styles.botonDesactivado,
           ]}
           onPress={guardarCambios}
           disabled={!hayCambios || guardando}
@@ -203,9 +182,7 @@ export default function EditarPerfil() {
           {guardando ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.textoGuardar}>
-              Guardar cambios
-            </Text>
+            <Text style={styles.textoGuardar}>Guardar cambios</Text>
           )}
         </TouchableOpacity>
 
@@ -214,9 +191,7 @@ export default function EditarPerfil() {
           disabled={guardando}
           style={styles.botonCancelar}
         >
-          <Text style={styles.textoCancelar}>
-            Cancelar
-          </Text>
+          <Text style={styles.textoCancelar}>Cancelar</Text>
         </TouchableOpacity>
 
         {alerta}

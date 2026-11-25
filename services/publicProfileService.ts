@@ -1,12 +1,6 @@
-
-import { auth, db } from "./firebase";
 import { getIdToken, reload } from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "./firebase";
 
 // Crear o sincronizar el perfil público
 export const sincronizarPerfilPublico = async () => {
@@ -36,10 +30,8 @@ export const sincronizarPerfilPublico = async () => {
 
   // Valores que coinciden con nuestras reglas
   const nombre = datos.nombreCompleto;
-  const avatar =
-    typeof datos.avatar === "string"
-      ? datos.avatar
-      : "👤";
+  const avatar = typeof datos.avatar === "string" ? datos.avatar : "👤";
+  //   const fotoURL = typeof datos.fotoURL === "string" ? datos.fotoURL : null;
 
   if (typeof nombre !== "string" || !nombre.trim()) {
     throw new Error("El nombre del usuario no es válido.");
@@ -51,13 +43,16 @@ export const sincronizarPerfilPublico = async () => {
   await setDoc(perfilRef, {
     nombre,
     avatar,
+    // fotoURL,
   });
 };
 
 // Actualizar el nombre o avatar del usuario
+
 export const actualizarDatosPerfil = async (
   nombreCompleto: string,
-  avatar: string
+  avatar: string,
+  //   fotoURL: string | null
 ) => {
   const user = auth.currentUser;
 
@@ -83,12 +78,28 @@ export const actualizarDatosPerfil = async (
 
   await getIdToken(user, true);
 
-  // 1. Actualizar los datos privados
   await updateDoc(doc(db, "users", user.uid), {
     nombreCompleto: nombre,
     avatar,
   });
 
-  // 2. Actualizar los datos públicos
+  //   const batch = writeBatch(db);
+
+  //   // Actualizar perfil personal.
+  //   batch.update(doc(db, "users", user.uid), {
+  //     nombreCompleto: nombre,
+  //     avatar,
+  //     fotoURL,
+  //   });
+
   await sincronizarPerfilPublico();
+
+  // Actualizar perfil visible para la familia.
+  //   batch.set(doc(db, "publicProfiles", user.uid), {
+  //     nombre,
+  //     avatar,
+  //     fotoURL,
+  //   });
+
+  //   await batch.commit();
 };
