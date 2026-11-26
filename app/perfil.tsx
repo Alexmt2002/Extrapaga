@@ -59,6 +59,27 @@ export default function Perfil() {
           Crear tarea doméstica
         </Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={{
+          backgroundColor: "#5EC287",
+          padding: 15,
+          borderRadius: 10,
+          alignItems: "center",
+          marginTop: 15,
+        }}
+        onPress={() => router.push("/tareas")}
+      >
+        <Text
+          style={{
+            color: "#FFFFFF",
+            fontSize: 16,
+            fontWeight: "bold",
+          }}
+        >
+          📋 Mis tareas
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

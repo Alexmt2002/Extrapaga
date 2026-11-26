@@ -10,6 +10,7 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
+  runTransaction,
 } from "firebase/firestore";
 
 export type HijoAsignable = {
@@ -34,6 +35,8 @@ export type Tarea = {
   recompensaCentimos: number;
   estado: "pending" | "review" | "approved" | "rejected";
   createdAt?: Date;
+   nombreAsignado: string;
+  avatarAsignado: string;
 };
 
 export type ResultadoTareas = {
@@ -41,6 +44,9 @@ export type ResultadoTareas = {
   esAdministrador: boolean;
   tieneFamilia: boolean;
 };
+
+export type AccionTarea = "terminar" | "aprobar" | "rechazar";
+
 
 // Obtener los hijos de la familia
 export const obtenerHijosFamilia = async (): Promise<HijoAsignable[]> => {
@@ -244,8 +250,19 @@ export const obtenerMisTareas = async (): Promise<ResultadoTareas> => {
   const resultado = await getDocs(consulta);
 
   // 4. Convertir documentos a objetos Tarea
-  const tareas: Tarea[] = resultado.docs.map((documento) => {
+ 
+const tareas: Tarea[] = await Promise.all(
+  resultado.docs.map(async (documento) => {
     const datos = documento.data();
+
+    // Consultar el perfil público del hijo asignado
+    const perfilDoc = await getDoc(
+      doc(db, "publicProfiles", datos.assignedTo)
+    );
+
+    const perfil = perfilDoc.exists()
+      ? perfilDoc.data()
+      : null;
 
     return {
       id: documento.id,
@@ -257,9 +274,15 @@ export const obtenerMisTareas = async (): Promise<ResultadoTareas> => {
       recompensaCentimos: datos.recompensaCentimos,
       estado: datos.estado,
       createdAt: datos.createdAt?.toDate(),
-    };
-  });
 
+      nombreAsignado:
+        perfil?.nombre ?? "Perfil pendiente",
+
+      avatarAsignado:
+        perfil?.avatar ?? "👤",
+    };
+  })
+);
   // Ordenar de más reciente a más antigua
   tareas.sort(
     (a, b) =>
@@ -273,3 +296,92 @@ export const obtenerMisTareas = async (): Promise<ResultadoTareas> => {
     tieneFamilia: true,
   };
 };
+export const cambiarEstadoTarea = async (
+  tareaId: string,
+  accion: AccionTarea
+) => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("Debes iniciar sesión.");
+  }
+
+  await reload(user);
+
+  if (!user.emailVerified) {
+    throw new Error("Debes verificar tu correo.");
+  }
+
+  await getIdToken(user, true);
+
+  const usuarioRef = doc(db, "users", user.uid);
+  const tareaRef = doc(db, "tasks", tareaId);
+
+  await runTransaction(db, async (transaction) => {
+    // 1. Leer usuario y tarea
+    const usuarioDoc = await transaction.get(usuarioRef);
+    const tareaDoc = await transaction.get(tareaRef);
+
+    if (!usuarioDoc.exists() || !tareaDoc.exists()) {
+      throw new Error("No se ha encontrado el usuario o la tarea.");
+    }
+
+    const usuario = usuarioDoc.data();
+    const tarea = tareaDoc.data();
+
+    if (
+      !usuario.familyId ||
+      usuario.familyId !== tarea.familyId
+    ) {
+      throw new Error("Esta tarea no pertenece a tu familia.");
+    }
+
+    // 2. El hijo envía la tarea a revisión
+    if (accion === "terminar") {
+      if (tarea.assignedTo !== user.uid) {
+        throw new Error("Esta tarea no está asignada a tu cuenta.");
+      }
+
+      if (
+        tarea.estado !== "pending" &&
+        tarea.estado !== "rejected"
+      ) {
+        throw new Error("Esta tarea no se puede enviar a revisión.");
+      }
+
+      transaction.update(tareaRef, {
+        estado: "review",
+        completedAt: serverTimestamp(),
+      });
+
+      return;
+    }
+
+    // 3. Aprobar o rechazar: solo administradores
+    const familiaRef = doc(db, "families", tarea.familyId);
+    const familiaDoc = await transaction.get(familiaRef);
+
+    if (!familiaDoc.exists()) {
+      throw new Error("No existe la familia.");
+    }
+
+    const administradores =
+      familiaDoc.data().adminIds as string[];
+
+    if (!administradores.includes(user.uid)) {
+      throw new Error("No tienes permisos de administrador.");
+    }
+
+    if (tarea.estado !== "review") {
+      throw new Error("La tarea no está pendiente de revisión.");
+    }
+
+    // 4. Guardar la decisión del administrador
+    transaction.update(tareaRef, {
+      estado: accion === "aprobar" ? "approved" : "rejected",
+      reviewedBy: user.uid,
+      reviewedAt: serverTimestamp(),
+    });
+  });
+};
+
